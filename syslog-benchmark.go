@@ -35,6 +35,9 @@ func main() {
 	syslogwriter, e := syslog.Dial(*proto,*host + ":" + strconv.Itoa(*port),syslog.LOG_ERR,*tag)
 	if e == nil {
 		log.SetOutput(syslogwriter)
+	} else {
+		fmt.Printf("Error: could not communicate with %s://%s:%d\n",*proto,*host,*port)
+		os.Exit(1)
 	}
 
 	msg := 0
