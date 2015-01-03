@@ -76,6 +76,6 @@ func main() {
 
 	//how many message did we send?
 	log.Print("Total messages sent = ", lastmessage)
-	log.Print("Total time = ", stopTime.Sub(startTime).Seconds())
+	log.Print("Total time = ", stopTime.Sub(startTime))
 	log.Print("Throughput = ", float64(lastmessage)/stopTime.Sub(startTime).Seconds(), " message per second")
 }
