@@ -5,37 +5,36 @@ import (
 	"fmt"
 	"log"
 	"log/syslog"
-	//"math"
 	"os"
-	"strconv"
 	"os/signal"
+	"strconv"
+	"time"
 )
 
-func sendData(max *int, syslogwriter *syslog.Writer) (int) {
+func sendData(max *int, syslogwriter *syslog.Writer) (int, time.Time) {
 	msg := 0
+	//Start a channel to listen for os.Inerrupt
 	sig := make(chan os.Signal, 1)
+	//Start a channel to stop upon os.Inerrupt
 	stop := make(chan bool, 1)
 	signal.Notify(sig, os.Interrupt)
 	go func() {
-		<-sig 
-		//os.Exit(123)
+		<-sig
+		fmt.Println("")
+		log.Println("Caught interrupt, stopping")
 		stop <- true
 	}()
 	for {
 		msg++
-		//fmt.Println("msg:",msg)
 		syslogwriter.Write([]byte(strconv.Itoa(msg)))
-		//if math.Mod(float64(msg), 10000) == 0 {
-			//fmt.Println(msg)
-		//}
 		select {
-		case <- stop: 
-			return msg
+		case <-stop:
+			return msg, time.Now()
 		default:
 			if *max == -1 {
 				continue
 			} else if msg >= *max {
-				return msg
+				return msg, time.Now()
 			}
 		}
 	}
@@ -71,8 +70,12 @@ func main() {
 	}
 
 	//Let's start sending data
-	lastmessage := sendData(msgs, syslogwriter)
+	log.Print("Starting sending messages")
+	startTime := time.Now()
+	lastmessage, stopTime := sendData(msgs, syslogwriter)
 
 	//how many message did we send?
-	fmt.Println("last message: ", lastmessage)
+	log.Print("Total messages sent = ", lastmessage)
+	log.Print("Total time = ", stopTime.Sub(startTime).Seconds())
+	log.Print("Throughput = ", float64(lastmessage)/stopTime.Sub(startTime).Seconds(), " message per second")
 }
