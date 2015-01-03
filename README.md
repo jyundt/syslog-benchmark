@@ -19,3 +19,33 @@ Upon receiving an interrupt, `syslog-benchmark` will stop sending messages and p
     -proto="tcp": protocol of syslog server: tcp/udp
     -tag="syslog-benchmark": syslog message tag
 
+##Examples
+All defaults (100 messages, port 514, tcp, 'syslog-benchmark' tag)
+
+    bash-4.2# ./syslog-benchmark -host 172.17.0.18                              
+    2015/01/03 08:56:55 Starting sending messages
+    2015/01/03 08:56:55 Total messages sent = 100
+    2015/01/03 08:56:55 Total time = 2.76832ms
+    2015/01/03 08:56:55 Throughput = 36122.991561669165 message per second
+    bash-4.2# 
+
+Sending 1,000,000 messages
+
+    bash-4.2# ./syslog-benchmark -host 172.17.0.18 -msgs 1000000
+    2015/01/03 08:58:32 Starting sending messages
+    2015/01/03 08:59:02 Total messages sent = 1000000
+    2015/01/03 08:59:02 Total time = 29.82881548s
+    2015/01/03 08:59:02 Throughput = 33524.629922716595 message per second
+    bash-4.2# 
+
+Sending unlimited messages, stopping with ctrl+c
+
+    bash-4.2# ./syslog-benchmark -host 172.17.0.18 -msgs -1 -proto udp -tag udp_test
+    2015/01/03 09:00:31 Starting sending messages
+    ^C
+    2015/01/03 09:01:52 Caught interrupt, stopping
+    2015/01/03 09:01:52 Total messages sent = 2439423
+    2015/01/03 09:01:52 Total time = 1m20.709714431s
+    2015/01/03 09:01:52 Throughput = 30224.651607279582 message per second
+    bash-4.2# 
+
