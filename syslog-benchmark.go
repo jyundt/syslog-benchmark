@@ -5,31 +5,38 @@ import (
 	"fmt"
 	"log"
 	"log/syslog"
-	"math"
+	//"math"
 	"os"
 	"strconv"
 	"os/signal"
 )
 
-func sendData(max *int, syslogwriter *syslog.Writer) {
+func sendData(max *int, syslogwriter *syslog.Writer) (int) {
 	msg := 0
 	sig := make(chan os.Signal, 1)
+	stop := make(chan bool, 1)
 	signal.Notify(sig, os.Interrupt)
 	go func() {
 		<-sig 
-		os.Exit(123)
+		//os.Exit(123)
+		stop <- true
 	}()
 	for {
 		msg++
 		//fmt.Println("msg:",msg)
 		syslogwriter.Write([]byte(strconv.Itoa(msg)))
-		if math.Mod(float64(msg), 10000) == 0 {
-			fmt.Println(msg)
-		}
-		if *max == -1 {
-			continue
-		} else if msg >= *max {
-			break
+		//if math.Mod(float64(msg), 10000) == 0 {
+			//fmt.Println(msg)
+		//}
+		select {
+		case <- stop: 
+			return msg
+		default:
+			if *max == -1 {
+				continue
+			} else if msg >= *max {
+				return msg
+			}
 		}
 	}
 
@@ -64,5 +71,8 @@ func main() {
 	}
 
 	//Let's start sending data
-	sendData(msgs, syslogwriter)
+	lastmessage := sendData(msgs, syslogwriter)
+
+	//how many message did we send?
+	fmt.Println("last message: ", lastmessage)
 }
