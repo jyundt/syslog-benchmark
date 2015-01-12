@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func sendData(max *int, syslogwriter *syslog.Writer) (int, time.Time) {
+func sendData(max *int, syslogwriter *syslog.Writer, timestamp *bool) (int, time.Time) {
 	msg := 0
 	//Start a channel to listen for os.Inerrupt
 	sig := make(chan os.Signal, 1)
@@ -26,7 +26,11 @@ func sendData(max *int, syslogwriter *syslog.Writer) (int, time.Time) {
 	}()
 	for {
 		msg++
-		syslogwriter.Write([]byte(strconv.Itoa(msg)))
+		if *timestamp {
+			syslogwriter.Write([]byte(strconv.Itoa(msg) + " " + time.Now().Format(time.RFC3339Nano)))
+		} else { 
+			syslogwriter.Write([]byte(strconv.Itoa(msg)))
+		}
 		select {
 		case <-stop:
 			return msg, time.Now()
@@ -48,6 +52,7 @@ func main() {
 	proto := flag.String("proto", "tcp", "protocol of syslog server: tcp/udp")
 	msgs := flag.Int("msgs", 100, "number of messages to send, -1 = unlimited")
 	tag := flag.String("tag", "syslog-benchmark", "syslog message tag")
+	timestamp := flag.Bool("timestamp", false, "Include timestamp in message?")
 
 	//Quick sanity check on flags
 	flag.Parse()
@@ -72,7 +77,7 @@ func main() {
 	//Let's start sending data
 	log.Print("Starting sending messages")
 	startTime := time.Now()
-	lastmessage, stopTime := sendData(msgs, syslogwriter)
+	lastmessage, stopTime := sendData(msgs, syslogwriter, timestamp)
 
 	//how many message did we send?
 	log.Print("Total messages sent = ", lastmessage)
